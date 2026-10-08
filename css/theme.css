@@ -1,0 +1,50 @@
+/* ============================================================
+   theme.css —— 全站配色/字体/圆角 变量（换肤唯一入口）
+   想换颜色？只改本文件里的色值即可，全站自动生效。
+   色值目前是参考视频的浅蓝+奶白占位，你可以随意替换。
+   ============================================================ */
+
+:root {
+	/* —— 页面背景 —— */
+	--paper-bg: #f6f7f9;          /* 纸张底色（内容页/场景背景） */
+	--paper-bg-2: #ffffff;        /* 卡片/纸面白色 */
+	--scene-glow: #eaf2fb;        /* 场景中心柔光 */
+
+	/* —— 储物柜 —— */
+	--locker-body: #cfe0ee;       /* 柜体外侧深色边 */
+	--locker-door: #e8f1f8;       /* 柜门正面浅蓝 */
+	--locker-door-edge: #b9d3e6;  /* 柜门边框/通风槽 */
+	--locker-inside: #bcd4e6;     /* 柜内背板 */
+	--locker-shelf: #dce9f3;      /* 层板颜色 */
+	--locker-handle: #9fb9cc;     /* 门把手 */
+
+	/* —— 文本 —— */
+	--ink: #2b3440;               /* 主文字（近黑藏青） */
+	--ink-soft: #6b7684;          /* 次要文字 */
+	--ink-faint: #9aa5b2;         /* 提示性文字 */
+
+	/* —— 强调色（文件夹/按钮/贴纸，可任意改） —— */
+	--accent-a: #d7f24f;          /* 荧光柠绿 */
+	--accent-b: #3146e0;          /* 宝蓝 */
+	--accent-c: #16161a;          /* 近黑 */
+	--accent-d: #f4f1e8;          /* 米白 */
+	--accent-e: #e8803f;          /* 橘子橙（预留） */
+	--accent-pink: #f3c9c2;       /* 便利贴粉 */
+	--accent-green: #cfe8cf;      /* 便利贴绿 */
+	--accent-yellow: #f3eeb4;     /* 便利贴黄 */
+
+	/* —— 线条/阴影 —— */
+	--line: #d8e0e8;
+	--shadow-soft: 0 18px 40px rgba(43, 52, 64, .14);
+	--shadow-card: 0 10px 24px rgba(43, 52, 64, .16);
+
+	/* —— 字体 —— */
+	--font-round: "Nunito", "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", system-ui, sans-serif;
+	--font-serif-display: Georgia, "Songti SC", "SimSun", serif;
+
+	/* —— 圆角 —— */
+	--r-sm: 10px;
+	--r-md: 18px;
+	--r-lg: 28px;
+	--r-pill: 999px;
+}

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>趣味问答 · 紫幻生日纪念</title>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/style.css?v=19">
+</head>
+<body class="paper">
+<main class="paper-page">
+	<a class="back-link" href="index.html">← CLOSE THE BOOK</a>
+	<header class="paper-head">
+		<div class="en">QUIZ / 召幻兽认证考试</div>
+		<h1>紫幻小课堂</h1>
+	</header>
+
+	<!-- 答题区 -->
+	<section id="quizStage" class="quiz-stage">
+		<div class="quiz-meta">
+			<span id="quizProgress">0 / 5</span>
+			<span id="quizScore">答对 0 题</span>
+		</div>
+		<div id="quizCard" class="quiz-card"></div>
+		<button id="quizNext" class="quiz-btn" hidden>下一题 →</button>
+	</section>
+
+	<!-- 结算区 -->
+	<section id="quizResult" class="quiz-result" hidden>
+		<div class="result-emoji" id="resultEmoji">🎉</div>
+		<h2 id="resultTitle">认证成功</h2>
+		<p id="resultScore"></p>
+		<p id="resultTitleName" class="result-title"></p>
+		<button class="quiz-btn" onclick="startQuiz()">再来一局</button>
+	</section>
+
+	<!-- 彩蛋层（答对≥60%触发，随机抽取） -->
+	<div id="eggLayer" class="egg-layer" hidden>
+		<div class="egg-fx" id="eggFx"></div>
+		<div class="egg-card">
+			<div class="egg-emoji" id="eggEmoji">🎉</div>
+			<h3 id="eggTitle">恭喜解锁彩蛋！</h3>
+			<p class="egg-text" id="eggText"></p>
+			<button class="quiz-btn" onclick="closeEgg()">收下啦</button>
+		</div>
+	</div>
+</main>
+
+<script src="js/data.js?v=3"></script>
+<script>
+/* ===================== 趣味问答逻辑 ===================== */
+const cfg = SITE.quiz;
+let pool = [];          // 本局题目
+let idx = 0;            // 当前题号
+let correct = 0;        // 答对数
+let answered = false;   // 当前题是否已作答
+
+const stage = document.getElementById("quizStage");
+const card = document.getElementById("quizCard");
+const progress = document.getElementById("quizProgress");
+const scoreEl = document.getElementById("quizScore");
+const nextBtn = document.getElementById("quizNext");
+const result = document.getElementById("quizResult");
+
+/* ---------- 洗牌 ---------- */
+function shuffle(arr) {
+	const a = arr.slice();
+	for (let i = a.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[a[i], a[j]] = [a[j], a[i]];
+	}
+	return a;
+}
+
+/* ---------- 开始一局 ---------- */
+function startQuiz() {
+	pool = shuffle(cfg.questions).slice(0, cfg.perRound);
+	idx = 0; correct = 0;
+	result.hidden = true;
+	stage.hidden = false;
+	renderQuestion();
+}
+
+/* ---------- 渲染一题 ---------- */
+function renderQuestion() {
+	answered = false;
+	nextBtn.hidden = true;
+	const q = pool[idx];
+	// 从干扰项池随机抽3个 + 正确答案，组成4个选项
+	const opts = shuffle([q.answer, ...shuffle(q.distractors).slice(0, 3)]);
+	progress.textContent = `${idx + 1} / ${pool.length}`;
+	scoreEl.textContent = `答对 ${correct} 题`;
+	card.innerHTML = `
+		<h3 class="quiz-q">${q.q}</h3>
+		<div class="quiz-opts">
+			${opts.map(o => `<button class="quiz-opt" data-v="${o}">${o}</button>`).join("")}
+		</div>
+		<p class="quiz-feedback" id="fb"></p>
+	`;
+	card.querySelectorAll(".quiz-opt").forEach(btn => {
+		btn.addEventListener("click", () => choose(btn, q.answer));
+	});
+}
+
+/* ---------- 作答 ---------- */
+function choose(btn, answer) {
+	if (answered) return;
+	answered = true;
+	const fb = document.getElementById("fb");
+	if (btn.dataset.v === answer) {
+		correct++;
+		btn.classList.add("right");
+		fb.textContent = "答对啦！🍊";
+		fb.className = "quiz-feedback right";
+	} else {
+		btn.classList.add("wrong");
+		// 标出正确答案
+		card.querySelectorAll(".quiz-opt").forEach(b => {
+			if (b.dataset.v === answer) b.classList.add("right");
+		});
+		fb.textContent = `正确答案：${answer}`;
+		fb.className = "quiz-feedback wrong";
+	}
+	scoreEl.textContent = `答对 ${correct} 题`;
+	nextBtn.hidden = false;
+	nextBtn.textContent = idx < pool.length - 1 ? "下一题 →" : "查看结果 →";
+}
+
+/* ---------- 下一题 / 结算 ---------- */
+nextBtn.addEventListener("click", () => {
+	idx++;
+	if (idx < pool.length) renderQuestion();
+	else showResult();
+});
+
+/* ---------- 结算 ---------- */
+function showResult() {
+	stage.hidden = true;
+	result.hidden = false;
+	const rate = correct / pool.length;
+	const passed = rate >= cfg.passRate;
+	document.getElementById("resultEmoji").textContent = passed ? "🎉" : "💪";
+	document.getElementById("resultTitle").textContent = passed ? "认证成功！" : "再背背书吧~";
+	document.getElementById("resultScore").textContent =
+		`本局 ${pool.length} 题，答对 ${correct} 题（正确率 ${Math.round(rate*100)}%）`;
+	// 按正确率给称号
+	let ti;
+	if (rate >= 1) ti = cfg.titles[4];
+	else if (rate >= 0.8) ti = cfg.titles[3];
+	else if (rate >= cfg.passRate) ti = cfg.titles[2];
+	else if (rate >= 0.4) ti = cfg.titles[1];
+	else ti = cfg.titles[0];
+	document.getElementById("resultTitleName").textContent = `称号：${ti}`;
+	// 解锁彩蛋
+	if (passed) {
+		setTimeout(() => openEgg(), 600);
+	}
+}
+
+/* ---------- 彩蛋：随机抽取 + 播放动画 ---------- */
+function openEgg() {
+	const egg = cfg.eggs[Math.floor(Math.random() * cfg.eggs.length)];
+	document.getElementById("eggEmoji").textContent = egg.emoji;
+	document.getElementById("eggTitle").textContent = egg.title;
+	document.getElementById("eggText").textContent = egg.text;
+	document.getElementById("eggLayer").hidden = false;
+	playEggFx(egg);
+}
+
+function playEggFx(egg) {
+	const fx = document.getElementById("eggFx");
+	fx.innerHTML = "";
+	if (egg.type === "rain" || egg.type === "confetti") {
+		const count = 36;
+		const colors = ["#f6b93b","#e55934","#7bc74d","#5aa9e6","#c77dff","#ff6b9d"];
+		for (let i = 0; i < count; i++) {
+			const el = document.createElement("span");
+			el.className = "fx-item";
+			if (egg.type === "rain") {
+				el.textContent = egg.emoji;
+				el.style.fontSize = (18 + Math.random()*14) + "px";
+			} else {
+				el.style.background = colors[Math.floor(Math.random()*colors.length)];
+				el.style.width = (6 + Math.random()*8) + "px";
+				el.style.height = (6 + Math.random()*10) + "px";
+				el.style.borderRadius = "2px";
+			}
+			el.style.left = Math.random()*100 + "%";
+			el.style.animationDelay = (Math.random()*1.5) + "s";
+			el.style.animationDuration = (2.2 + Math.random()*1.8) + "s";
+			fx.appendChild(el);
+		}
+	} else if (egg.type === "cake") {
+		// 蛋糕弹跳动效由 egg-emoji 的 bounce 实现，无需额外元素
+	}
+}
+
+function closeEgg() {
+	document.getElementById("eggLayer").hidden = true;
+	document.getElementById("eggFx").innerHTML = "";
+}
+
+// 启动
+startQuiz();
+</script>
+</body>
+</html>

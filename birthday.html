@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生日快乐 · 紫幻生日纪念</title>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/style.css?v=19">
+</head>
+<body class="paper">
+<main class="paper-page">
+	<a class="back-link" href="index.html">← BACK TO LOCKER</a>
+	<header class="paper-head">
+		<div class="en">HAPPY BIRTHDAY / 11.16</div>
+		<h1>生日快乐</h1>
+	</header>
+
+	<!-- 倒计时 -->
+	<section class="countdown" id="countdown">
+		<div class="cd-num"><span id="cdDays">00</span><small>天</small></div>
+		<div class="cd-sep">:</div>
+		<div class="cd-num"><span id="cdHours">00</span><small>时</small></div>
+		<div class="cd-sep">:</div>
+		<div class="cd-num"><span id="cdMins">00</span><small>分</small></div>
+		<div class="cd-sep">:</div>
+		<div class="cd-num"><span id="cdSecs">00</span><small>秒</small></div>
+		<p class="cd-tip" id="cdTip">距离紫幻的生日还有</p>
+	</section>
+
+	<!-- 蛋糕 + 蜡烛 -->
+	<section class="cake-stage">
+		<div class="cake">
+			<div class="candles" id="candles"></div>
+			<div class="cake-top"></div>
+			<div class="cake-mid"></div>
+			<div class="cake-bottom"></div>
+			<div class="cake-plate"></div>
+		</div>
+	</section>
+
+	<!-- 操作按钮 -->
+	<section class="birthday-actions">
+		<button class="quiz-btn" id="blowBtn">🌬️ 吹蜡烛</button>
+	</section>
+
+	<!-- 许愿卡 -->
+	<section class="wish-card" id="wishCard" hidden>
+		<div class="wish-emoji">🎉</div>
+		<h3>许下你的愿望</h3>
+		<textarea id="wishInput" placeholder="写下想对紫幻说的话或生日愿望…" maxlength="100"></textarea>
+		<button class="quiz-btn" onclick="saveWish()">保存愿望 ✨</button>
+		<p class="wish-saved" id="wishSaved" hidden>愿望已保存，一定会实现的 🍊</p>
+	</section>
+
+	<!-- 庆祝彩纸层 -->
+	<div class="confetti-layer" id="confettiLayer"></div>
+</main>
+
+<script src="js/data.js?v=8"></script>
+<script>
+const B = SITE.birthday;
+const target = new Date(SITE.profile.birthdayTarget + "T00:00:00");
+
+/* ---------- 倒计时 ---------- */
+function pad(n) { return String(n).padStart(2, "0"); }
+function updateCountdown() {
+	let now = new Date();
+	let diff = target - now;
+	if (diff < 0) {
+		// 目标日已过，若开启顺延则跳到下一年
+		if (B.afterTargetYear) {
+			target.setFullYear(target.getFullYear() + 1);
+			diff = target - now;
+		} else {
+			diff = 0;
+		}
+	}
+	if (diff <= 0) {
+		// 生日当天：庆祝态
+		document.getElementById("cdTip").textContent = "今天就是紫幻的生日！🎂";
+		document.getElementById("cdDays").textContent = "00";
+		document.getElementById("cdHours").textContent = "00";
+		document.getElementById("cdMins").textContent = "00";
+		document.getElementById("cdSecs").textContent = "00";
+		return;
+	}
+	const d = Math.floor(diff / 86400000);
+	const h = Math.floor((diff % 86400000) / 3600000);
+	const m = Math.floor((diff % 3600000) / 60000);
+	const s = Math.floor((diff % 60000) / 1000);
+	document.getElementById("cdDays").textContent = pad(d);
+	document.getElementById("cdHours").textContent = pad(h);
+	document.getElementById("cdMins").textContent = pad(m);
+	document.getElementById("cdSecs").textContent = pad(s);
+}
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+/* ---------- 渲染蜡烛 ---------- */
+const candlesBox = document.getElementById("candles");
+for (let i = 0; i < B.candleCount; i++) {
+	const c = document.createElement("div");
+	c.className = "candle";
+	c.innerHTML = `<div class="flame"></div><div class="wick"></div>`;
+	candlesBox.appendChild(c);
+}
+
+/* ---------- 吹蜡烛 ---------- */
+const blowBtn = document.getElementById("blowBtn");
+const wishCard = document.getElementById("wishCard");
+let blown = false;
+
+blowBtn.addEventListener("click", () => {
+	if (blown) return;
+	blown = true;
+	// 依次熄灭蜡烛
+	const flames = document.querySelectorAll(".flame");
+	flames.forEach((f, i) => {
+		setTimeout(() => {
+			f.classList.add("out");
+		}, i * 60);
+	});
+	blowBtn.textContent = "蜡烛已吹灭 🕯️";
+	// 全部熄灭后弹出许愿卡 + 彩纸
+	setTimeout(() => {
+		wishCard.hidden = false;
+		wishCard.scrollIntoView({ behavior: "smooth" });
+		launchConfetti();
+	}, flames.length * 60 + 400);
+});
+
+/* ---------- 许愿卡保存（本地存储） ---------- */
+function saveWish() {
+	const txt = document.getElementById("wishInput").value.trim();
+	if (!txt) return;
+	localStorage.setItem("zihuan_wish", txt);
+	document.getElementById("wishSaved").hidden = false;
+}
+// 回显已保存的愿望
+const savedWish = localStorage.getItem("zihuan_wish");
+if (savedWish) {
+	document.getElementById("wishInput").value = savedWish;
+}
+
+/* ---------- 庆祝彩纸 ---------- */
+function launchConfetti() {
+	const layer = document.getElementById("confettiLayer");
+	layer.innerHTML = "";
+	const colors = ["#f6b93b","#e55934","#7bc74d","#5aa9e6","#c77dff","#ff6b9d","#ffd93d"];
+	for (let i = 0; i < 80; i++) {
+		const p = document.createElement("span");
+		p.className = "confetti-piece";
+		p.style.left = Math.random() * 100 + "%";
+		p.style.background = colors[Math.floor(Math.random() * colors.length)];
+		p.style.animationDelay = Math.random() * 0.8 + "s";
+		p.style.animationDuration = (2.5 + Math.random() * 2) + "s";
+		p.style.width = (6 + Math.random() * 6) + "px";
+		p.style.height = (8 + Math.random() * 8) + "px";
+		layer.appendChild(p);
+	}
+	setTimeout(() => { layer.innerHTML = ""; }, 6000);
+}
+</script>
+</body>
+</html>

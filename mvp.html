@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的MVP · 紫幻生日纪念</title>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/style.css?v=19">
+</head>
+<body class="paper">
+<main class="paper-page">
+	<a class="back-link" href="index.html">← BACK TO LOCKER</a>
+	<header class="paper-head">
+		<div class="en">02 / MVP MOMENTS</div>
+		<h1>我的MVP</h1>
+		<p class="mvp-tip">自动滚动中 · 鼠标悬停暂停 · 点击图片查看大图</p>
+	</header>
+
+	<section id="mvpWall" class="mvp-wall"></section>
+</main>
+
+<!-- 大图查看 -->
+<div id="mvpLightbox" class="lightbox" hidden>
+	<img id="mvpBig" src="" alt="">
+	<button class="lightbox-close" onclick="closeLightbox()">×</button>
+</div>
+
+<script src="js/data.js?v=5"></script>
+<script>
+/* ---------- 渲染 MVP 图片墙（瀑布流） ---------- */
+const wall = document.getElementById("mvpWall");
+wall.innerHTML = SITE.mvp.map(f =>
+	`<img class="mvp-img" src="assets/images/mvp/${f}" alt="MVP" loading="lazy" onclick="openLightbox(this.src)">`
+).join("");
+
+/* ---------- 大图查看 ---------- */
+const lb = document.getElementById("mvpLightbox");
+const big = document.getElementById("mvpBig");
+function openLightbox(src) {
+	big.src = src;
+	lb.hidden = false;
+}
+function closeLightbox() {
+	lb.hidden = true;
+	big.src = "";
+}
+lb.addEventListener("click", e => { if (e.target === lb) closeLightbox(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeLightbox(); });
+
+/* ---------- 自动滚动：鼠标悬停暂停，到底回顶循环 ---------- */
+let autoScrolling = true;
+let resumeTimer = null;
+const SPEED = 0.6;       // 每帧滚动像素（越大越快）
+const RESUME_MS = 1800;  // 鼠标静止多久后恢复滚动
+
+function autoScroll() {
+	if (autoScrolling && lb.hidden) {
+		window.scrollBy(0, SPEED);
+		// 到底了，平滑回顶
+		if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 2) {
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
+	}
+	requestAnimationFrame(autoScroll);
+}
+requestAnimationFrame(autoScroll);
+
+// 鼠标移动时暂停，静止后恢复
+document.addEventListener("mousemove", () => {
+	autoScrolling = false;
+	clearTimeout(resumeTimer);
+	resumeTimer = setTimeout(() => { autoScrolling = true; }, RESUME_MS);
+});
+// 触摸/滚轮也暂停
+document.addEventListener("touchstart", () => { autoScrolling = false; clearTimeout(resumeTimer); });
+window.addEventListener("wheel", () => { autoScrolling = false; clearTimeout(resumeTimer);
+	resumeTimer = setTimeout(() => { autoScrolling = true; }, RESUME_MS);
+}, { passive: true });
+</script>
+</body>
+</html>

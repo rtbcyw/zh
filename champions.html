@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的冠军 · 紫幻生日纪念</title>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/style.css?v=19">
+</head>
+<body class="paper">
+<main class="paper-page">
+	<a class="back-link" href="index.html">← BACK TO LOCKER</a>
+	<header class="paper-head">
+		<div class="en">01 / CHAMPIONS</div>
+		<h1>我的冠军</h1>
+	</header>
+
+	<section id="championList" class="champion-grid"></section>
+</main>
+
+<script src="js/data.js?v=5"></script>
+<script>
+/* ---------- 渲染夺冠视频卡片 ---------- */
+const list = document.getElementById("championList");
+list.innerHTML = SITE.championVideos.map((v, i) => {
+	const hasVideo = !!v.file;
+	const cover = v.cover ? `style="background-image:url('assets/images/${v.cover}')"` : "";
+	return `
+	<article class="champion-card">
+		<div class="champion-video">
+			${hasVideo
+				? `<video src="assets/video/${v.file}" ${cover ? `poster="assets/images/${v.cover}"` : ""} controls playsinline preload="metadata"></video>`
+				: `<div class="champion-placeholder" ${cover}>🎬 视频待补充</div>`
+			}
+		</div>
+		<div class="champion-info">
+			<h3>${v.title}</h3>
+			<p>${v.note}</p>
+		</div>
+	</article>
+	`;
+}).join("");
+</script>
+</body>
+</html>
